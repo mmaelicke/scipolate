@@ -50,20 +50,10 @@ class Interpolator:
         _f = settings.get('func')
 
         # switch
-        if _f.lower() == 'nearest':
-            return methods.nearest
-        elif _f.lower() == 'linear':
-            return methods.linear
-        elif _f.lower() == 'cubic':
-            return methods.cubic
-        elif _f.lower() == 'rbf':
-            return methods.rbf
-        elif _f.lower() == 'idw':
-            return methods.idw
-        elif _f.lower() == 'svm':
-            return methods.svm
-        else:
+        if not hasattr(methods, _f.lower()):
             raise InterpolatorError('%s is not a known method.' % _f)
+        else:
+            return getattr(methods, _f)
 
     @staticmethod
     def build_grid(x, y, params):

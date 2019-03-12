@@ -50,9 +50,14 @@ def idw(x, y, z, grid, **settings):
     minp = settings.get('min_points', 4)
     maxp = settings.get('max_points', 20)
     na = settings.get('fill_na')
+    exp = settings.get('exp')
 
     # create the object
-    f = Idw(x, y, z, radius, min_points=minp, max_points=maxp, fill_na=na)
+    f = Idw(x, y, z, radius,
+            min_points=minp,
+            max_points=maxp,
+            fill_na=na,
+            exp=exp)
     shape = grid[0].shape
 
     # apply

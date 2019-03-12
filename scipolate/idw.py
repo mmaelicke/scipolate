@@ -3,7 +3,8 @@ from scipy.spatial.distance import cdist
 
 
 class Idw:
-    def __init__(self, x, y, z, radius, min_points=4, max_points=20, fill_na=None):
+    def __init__(self, x, y, z, radius, min_points=4, max_points=20,
+                 fill_na=None, exp=2):
         # save params
         self.x = np.asarray(x)
         self.y = np.asarray(y)
@@ -12,6 +13,7 @@ class Idw:
         self.min = min_points
         self.hit_min = 0
         self.max = max_points
+        self.exp = exp
 
         # check input data
         if not len(self.x) == len(self.y) == len(self.z):
@@ -68,17 +70,14 @@ class Idw:
 
         # if too many points, use the max closest
         if len(intersect) > self.max:
-            intersect = np.argsort(mat[intersect])[:self.max]
+            intersect = np.argsort(mat[intersect])[:self.max:-1]
 
         # calculation
         _z = self.z[intersect]
-        _d = mat[intersect]
+        _d = mat[intersect] + 1e-15 # avoid inf weights
 
-        # normed weights
-        s = (1 / _d) / np.sum(1 / _d)
-
-        # weight by normed weights
-        return np.sum(s * _z)
+        # return normed
+        return np.sum(_z / _d**self.exp) / np.sum(1 / _d**self.exp)
 
 
 
