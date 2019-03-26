@@ -3,6 +3,7 @@ import numpy as np
 
 from scipy.interpolate import griddata, Rbf
 from sklearn.svm import SVR
+from skgstat import Variogram, OrdinaryKriging
 
 from .idw import Idw
 
@@ -17,19 +18,19 @@ def __scipy_griddata(x, y, z, grid, method):
     return griddata(points, values, grid, method=method)
 
 
-def nearest(x, y, z, grid, **settings):
+def nearest(Intp, x, y, z, grid, **settings):
     return __scipy_griddata(x, y, z, grid, 'nearest')
 
 
-def linear(x, y, z, grid, **settings):
+def linear(Intp, x, y, z, grid, **settings):
     return __scipy_griddata(x, y, z, grid, 'linear')
 
 
-def cubic(x, y, z, grid, **settings):
+def cubic(Intp, x, y, z, grid, **settings):
     return __scipy_griddata(x, y, z, grid, 'cubic')
 
 
-def rbf(x, y, z, grid, **settings):
+def rbf(Intp, x, y, z, grid, **settings):
     # get the settings
     func = settings.get('func', 'thin_plate')
     #epsilon = settings.get('epsilon')
@@ -44,7 +45,7 @@ def rbf(x, y, z, grid, **settings):
     return f(grid[0].flatten(), grid[1].flatten()).reshape(shape)
 
 
-def idw(x, y, z, grid, **settings):
+def idw(Intp, x, y, z, grid, **settings):
     # get settings
     radius = settings.get('radius', 5000)
     minp = settings.get('min_points', 4)
@@ -64,7 +65,7 @@ def idw(x, y, z, grid, **settings):
     return f(grid[0].flatten(), grid[1].flatten()).reshape(shape)
 
 
-def svm(x, y, z, grid, **settings):
+def svm(Intp, x, y, z, grid, **settings):
     # get settings
     gamma = 'scale'
     kernel = settings.get('kernel', 'rbf')
@@ -82,3 +83,37 @@ def svm(x, y, z, grid, **settings):
 
     # apply
     return svr.predict(Xi).reshape(xx.shape)
+
+def ordinary_kriging(Intp, x, y, z, grid, **settings):
+    # get the settings
+    model = settings.get('model', 'gaussian')
+    estimator = settings.get('estimator', 'matheron')
+    n_lags = settings.get('n_lags', 15)
+    maxlag = settings.get('maxlag', 'median')
+    minp = settings.get('min_points', 5)
+    maxp = settings.get('max_points', 15)
+    mode = settings.get('mode', 'estimate')
+    precision = settings.get('precision', 1000)
+
+    # build the coordinates
+    coords = np.concatenate((x, y)).reshape(2, len(x)).T.copy()
+
+    # create the Variogram
+    v = Variogram(coords, z, 
+            estimator=estimator, 
+            model=model, 
+            n_lags=n_lags,
+            maxlag=maxlag,
+            normalize=False
+        )
+
+    # plot the variogram
+    fig = v.plot(show=False)
+    img = Intp.img_to_base64(fig)
+    Intp.report['score'] = dict(plot=img, name='Variogram')
+ 
+    # kriging
+    shape = grid[0].shape
+    ok = OrdinaryKriging(v, min_points=minp, max_points=maxp, mode=mode, precision=precision)
+
+    return ok.transform(grid[0].flatten(), grid[1].flatten()).reshape(shape)

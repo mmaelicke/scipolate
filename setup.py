@@ -29,6 +29,7 @@ setup(
     author_email="mirko.maelicke@kit.edu",
     description="helper for running different scipy 2D interpolations",
     long_description=readme(),
+    long_description_content_type='text/markdown',
     classifiers=classifiers(),
     install_requirements=requirements(),
     packages=find_packages(),

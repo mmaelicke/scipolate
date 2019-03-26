@@ -67,7 +67,7 @@ class Interpolator:
 
     def run(self):
         t1 = time.time()
-        self.result = self.method(self.x, self.y, self.z, (self.xx, self.yy), **self.params)
+        self.result = self.method(self, self.x, self.y, self.z, (self.xx, self.yy), **self.params)
         t2 = time.time()
 
         # should be validated?
@@ -138,7 +138,7 @@ class Interpolator:
             (str(e))
 
         def step(i):
-            return self.method(np.delete(self.x, i), np.delete(self.y, i),
+            return self.method(self, np.delete(self.x, i), np.delete(self.y, i),
                 np.delete(self.z, i),
                 (np.asarray([self.x[i]]), np.asarray([self.y[i]])),
                 **self.params)
@@ -184,11 +184,21 @@ class Interpolator:
         if not as_base64:
             return ax
         
+        return self.img_to_base64(fig)
         # create the output figure
+        #buffer = BytesIO()
+        #fig.savefig(buffer, format="png")
+        #buffer.seek(0)
+        #data = base64.b64encode(buffer.read()).decode()
+
+        # return
+        #return 'data:image/png;base64, %s' % data
+
+    @staticmethod
+    def img_to_base64(fig, fmt='png'):
         buffer = BytesIO()
-        fig.savefig(buffer, format="png")
+        fig.savefig(buffer, format=fmt)
         buffer.seek(0)
         data = base64.b64encode(buffer.read()).decode()
 
-        # return
-        return 'data:image/png;base64, %s' % data
+        return 'data:image/%s;base64, %s' % (fmt, data)
