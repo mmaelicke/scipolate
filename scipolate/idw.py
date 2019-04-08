@@ -70,7 +70,7 @@ class Idw:
 
         # if too many points, use the max closest
         if len(intersect) > self.max:
-            intersect = np.argsort(mat[intersect])[:self.max:-1]
+            intersect = np.argsort(mat[intersect])[:self.max]
 
         # calculation
         _z = self.z[intersect]

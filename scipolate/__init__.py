@@ -1,2 +1,2 @@
-from ._helper import interpolate
+from ._helper import WebInterface
 from .main import Interpolator
